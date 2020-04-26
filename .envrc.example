@@ -1,0 +1,4 @@
+export CONVERTER="/home/tristram/beta.gouv.fr/tartare-tools/target/release/gtfs2netexfr"
+export DATAGOUV_API="https://demo.data.gouv.fr/api/1"
+export DATAGOUV_API_KEY=""
+export TRANSPORT_ORGANIZATION_ID="5abca8d588ee386ee6ece479"
