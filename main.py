@@ -23,10 +23,10 @@ def worker():
     logging.info('Setting up a worker')
     while True:
         item = q.get()
-        logging.info(f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}")
         if item is None:
-            logging.warn('The queue recieved and empty item')
+            logging.warn('The queue recieved an empty item')
             break
+        logging.info(f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}")
         try:
             netex = download_and_convert(item['url'], 'transport.data.gouv.fr')
             logging.debug(f"Got a netex repooo {netex}")
