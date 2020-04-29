@@ -5,6 +5,7 @@ and upload them as community resources to transport.data.gouv.fr
 """
 
 import logging
+import os
 import queue
 import threading
 from waitress import serve
@@ -14,8 +15,9 @@ from gtfs2netexfr import download_and_convert
 from datagouv_publisher import publish_to_datagouv
 
 
-logging.basicConfig(filename='logs.log',level=logging.DEBUG,\
-      format='%(asctime)s -- %(levelname)s -- %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s -- %(levelname)s -- %(message)s')
+
+PUBLISHER = os.environ.get("PUBLISHER", "transport.data.gouv.fr")
 
 q = queue.SimpleQueue()
 
@@ -23,12 +25,12 @@ def worker():
     logging.info('Setting up a worker')
     while True:
         item = q.get()
-        logging.info(f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}")
         if item is None:
-            logging.warn('The queue recieved and empty item')
+            logging.warn('The queue recieved an empty item')
             break
+        logging.info(f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}")
         try:
-            netex = download_and_convert(item['url'], 'transport.data.gouv.fr')
+            netex = download_and_convert(item['url'], PUBLISHER)
             logging.debug(f"Got a netex repooo {netex}")
             publish_to_datagouv(item['datagouv_id'], netex)
 
