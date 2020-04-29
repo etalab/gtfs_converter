@@ -14,8 +14,8 @@ from gtfs2netexfr import download_and_convert
 from datagouv_publisher import publish_to_datagouv
 
 
-logging.basicConfig(filename='logs.log',level=logging.DEBUG,\
-      format='%(asctime)s -- %(levelname)s -- %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s -- %(levelname)s -- %(message)s')
+
 
 q = queue.SimpleQueue()
 
