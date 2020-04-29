@@ -13,4 +13,4 @@ Edit the docker_env file to set your credentials
 
 Run the service
 
-`docker run --env-file docker_env -p8080:8080 nap_converter`
+`docker run --rm --env-file docker_env -p8080:8080 nap_converter`
