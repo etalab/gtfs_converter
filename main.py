@@ -8,6 +8,7 @@ import logging
 import os
 import queue
 import threading
+import datetime
 from waitress import serve
 from flask import Flask, request, make_response
 
@@ -50,11 +51,24 @@ def gtfs2netex():
     datagouv_id = request.args.get('datagouv_id')
     url = request.args.get('url')
     if datagouv_id and url:
-        q.put({'url': url, 'datagouv_id': datagouv_id})
+        q.put({'url': url, 'datagouv_id': datagouv_id, "task_date": datetime.datetime.today()})
         logging.info(f"Enquing {url} for datagouv_id {datagouv_id}")
         return 'The request was put in a queue'
     else:
         return make_response('url and datagouv_id parameters are required', 400)
+
+
+@app.route('/stats')
+def stats():
+    return {
+        "nb_queued_elements": q.qsize()
+    }
+
+
+@app.route('/queue')
+def queue():
+    elements = list(q.queue)
+    return {"queue": elements}
 
 
 @app.route('/')
