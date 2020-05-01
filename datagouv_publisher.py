@@ -23,7 +23,8 @@ def find_community_resources(dataset_id, netex_file):
     data = ret.json()['data']
 
     if data is not None:
-        filtered = [r for r in data if r['title'] == netex_file]
+        # Note: datagouv lowercase the file names, so we do the same
+        filtered = [r for r in data if r['title'].lower() == netex_file.lower()]
         if len(filtered) == 0:
             logging.debug("Found the dataset %s, but no existing ressource", dataset_id)
             return None
