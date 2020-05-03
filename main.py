@@ -73,6 +73,6 @@ def queue():
 
 @app.route('/')
 def index():
-    return 'Hello, have a look at /gtfs2netex. Nothing else here.'
+    return 'Hello, have a look at /gtfs2netexfr. Nothing else here.'
 
 serve(app, listen='*:8080')
