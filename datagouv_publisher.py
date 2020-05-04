@@ -122,7 +122,7 @@ def upload_resource(resource_id, filename):
     headers = {"X-API-KEY": DATAGOUV_API_KEY}
     ret = requests.post(url, headers=headers, files={"file": open(filename, "rb")})
     ret.raise_for_status()
-    logging.debug("Uploading an new file %s on resource %s done", filename, resource_id)
+    logging.debug("Uploading done", filename, resource_id)
 
 
 def publish_to_datagouv(dataset_id, netex_file):
