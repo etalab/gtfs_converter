@@ -16,7 +16,7 @@ DATAGOUV_API_KEY = os.environ["DATAGOUV_API_KEY"]
 
 def _find_community_resources(dataset_id):
     """
-    Checks if the a community resource already exists
+    returns all netex created as $TRANSPORT_ORGANIZATION_ID as community resource
     """
     logging.debug("Searching community ressource in dataset %s", dataset_id)
     url = f"{DATAGOUV_API}/datasets/community_resources/"
@@ -36,9 +36,7 @@ def _find_community_resources(dataset_id):
 
 def _delete_community_resources(dataset_id, resources):
     """
-    Creates a community resource and uploads the file
-
-    This call will not link the resource. It requires and extra call
+    delete the community resources
     """
     logging.debug("deleting %s", resources)
     headers = {"X-API-KEY": DATAGOUV_API_KEY}
@@ -55,7 +53,7 @@ def _delete_community_resources(dataset_id, resources):
 
 def _delete_dataset_netex(dataset_id):
     """
-    This will delete the associated netex resource
+    This will delete the associated netex resources
     """
     try:
         logging.info("Going to delete the netex file of the dataset %s", dataset_id)
