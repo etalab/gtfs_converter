@@ -6,7 +6,8 @@ import logging
 import re
 import shutil
 
-CONVERTER = os.environ['CONVERTER']
+CONVERTER = os.environ["CONVERTER"]
+
 
 def download_gtfs(url):
     """
@@ -15,7 +16,7 @@ def download_gtfs(url):
     """
     logging.debug(f"Start downloading {url}")
     local_filename, headers = urllib.request.urlretrieve(url)
-    fname = ''
+    fname = ""
     if "Content-Disposition" in headers.keys():
         fname = re.findall('filename="?([^"]+)"?', headers["Content-Disposition"])[0]
     else:
@@ -33,19 +34,25 @@ def convert(gtfs_src, publisher, fname):
     """
     with tempfile.TemporaryDirectory() as netex_dir:
         logging.info(f"Start converting {gtfs_src} to {netex_dir}")
-        ret = subprocess.run([
-            CONVERTER,
-            "--input", gtfs_src,
-            "--output", netex_dir,
-            "--participant", publisher
-        ])
+        ret = subprocess.run(
+            [
+                CONVERTER,
+                "--input",
+                gtfs_src,
+                "--output",
+                netex_dir,
+                "--participant",
+                publisher,
+            ]
+        )
         logging.debug(f"Conversion done with return code {ret.returncode}")
         if ret.returncode == 0:
             netex_zip = f"{fname}.netex"
-            shutil.make_archive(netex_zip, 'zip', netex_dir)
+            shutil.make_archive(netex_zip, "zip", netex_dir)
             return f"{netex_zip}.zip"
 
         raise Exception("Unable to convert file")
+
 
 def download_and_convert(url, publisher):
     gtfs, fname = download_gtfs(url)
