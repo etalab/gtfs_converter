@@ -27,6 +27,18 @@ def download_gtfs(url):
     return local_filename, fname
 
 
+def _run_command(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while True:
+        output = process.stdout.readline().decode()
+        if process.poll() is not None:
+            break
+        if output:
+            logging.info(output.strip())
+    rc = process.poll()
+    return rc
+
+
 def convert(gtfs_src, publisher, fname):
     """
     Converts a given gtfs file and returns the path to the generated netex zip file.
@@ -34,7 +46,8 @@ def convert(gtfs_src, publisher, fname):
     """
     with tempfile.TemporaryDirectory() as netex_dir:
         logging.info(f"Start converting {gtfs_src} to {netex_dir}")
-        ret = subprocess.run(
+
+        ret = _run_command(
             [
                 CONVERTER,
                 "--input",
@@ -45,8 +58,8 @@ def convert(gtfs_src, publisher, fname):
                 publisher,
             ]
         )
-        logging.debug(f"Conversion done with return code {ret.returncode}")
-        if ret.returncode == 0:
+        logging.debug(f"Conversion done with return code {ret}")
+        if ret == 0:
             netex_zip = f"{fname}.netex"
             shutil.make_archive(netex_zip, "zip", netex_dir)
             return f"{netex_zip}.zip"
