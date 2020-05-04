@@ -11,12 +11,32 @@ import threading
 import datetime
 from waitress import serve
 from flask import Flask, request, make_response
+from pylogctx import context as log_context
+from logging import config
 
 from gtfs2netexfr import download_and_convert
 from datagouv_publisher import publish_to_datagouv
 
-
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s -- %(levelname)s -- %(message)s')
+logging.config.dictConfig({
+    'version': 1,
+    'formatters': {'basic': {
+        '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+        'format': "%(asctime)s -- %(levelname)s -- %(message)s'",
+    }},
+    'filters': {'context': {
+        '()': 'pylogctx.AddContextFilter',
+    }},
+    'handlers': {'console': {
+        'class': 'logging.StreamHandler',
+        'filters': ['context'],
+        'formatter': 'basic',
+    }},
+    'root': {
+        'level': 'DEBUG',
+        'handlers': ['console'],
+    },
+})
+# logging.basicConfig(level=logging.DEBUG, format='%(asctime)s -- %(levelname)s -- %(message)s')
 
 PUBLISHER = os.environ.get("PUBLISHER", "transport.data.gouv.fr")
 
@@ -29,16 +49,18 @@ def worker():
         if item is None:
             logging.warn('The queue recieved an empty item')
             break
-        logging.info(f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}")
-        try:
-            netex = download_and_convert(item['url'], PUBLISHER)
-            logging.debug(f"Got a netex repooo {netex}")
-            publish_to_datagouv(item['datagouv_id'], netex)
 
-        except Exception as err:
-            logging.error(f"Conversion for url {item['url']} failed: {err}")
-        finally:
-            q.task_done()
+        with log_context(task_id=item['datagouv_id']):
+            logging.info(f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}")
+            try:
+                netex = download_and_convert(item['url'], PUBLISHER)
+                logging.debug(f"Got a netex repooo {netex}")
+                publish_to_datagouv(item['datagouv_id'], netex)
+
+            except Exception as err:
+                logging.error(f"Conversion for url {item['url']} failed: {err}")
+            finally:
+                q.task_done()
 
 
 q = queue.Queue()
