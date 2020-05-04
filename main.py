@@ -23,7 +23,7 @@ logging.config.dictConfig(
         "formatters": {
             "basic": {
                 "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-                "format": "%(asctime)s -- %(levelname)s -- %(message)s'",
+                "format": "%(asctime)s -- %(levelname)s [%(threadName)s] -- %(message)s'",
             }
         },
         "filters": {"context": {"()": "pylogctx.AddContextFilter"}},
@@ -67,8 +67,13 @@ def worker():
 
 
 q = queue.Queue()
-t = threading.Thread(target=worker)
-t.start()
+
+threads = []
+nb_threads = int(os.environ.get("NB_THREADS", 1))
+for i in range(nb_threads):
+    t = threading.Thread(target=worker, name=f"worker_{i}")
+    threads.append(t)
+    t.start()
 
 app = Flask(__name__)
 
