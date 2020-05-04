@@ -37,7 +37,6 @@ logging.config.dictConfig(
         "root": {"level": "DEBUG", "handlers": ["console"]},
     }
 )
-# logging.basicConfig(level=logging.DEBUG, format='%(asctime)s -- %(levelname)s -- %(message)s')
 
 PUBLISHER = os.environ.get("PUBLISHER", "transport.data.gouv.fr")
 
