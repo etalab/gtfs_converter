@@ -25,6 +25,7 @@ def find_community_resources(dataset_id, netex_file):
     if data is not None:
         # Note: datagouv lowercase the file names, so we do the same
         filtered = [r for r in data if r["title"].lower() == netex_file.lower()]
+        logging.debug("community resources: %s", [r['title'] for r in data])
         if len(filtered) == 0:
             logging.debug("Found the dataset %s, but no existing ressource", dataset_id)
             return None
@@ -122,7 +123,7 @@ def upload_resource(resource_id, filename):
     headers = {"X-API-KEY": DATAGOUV_API_KEY}
     ret = requests.post(url, headers=headers, files={"file": open(filename, "rb")})
     ret.raise_for_status()
-    logging.debug("Uploading done", filename, resource_id)
+    logging.debug("Uploading done")
 
 
 def publish_to_datagouv(dataset_id, netex_file):
