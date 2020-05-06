@@ -1,6 +1,5 @@
 import subprocess
 import urllib.request
-import tempfile
 import os
 import logging
 import re
@@ -39,34 +38,33 @@ def _run_command(command):
     return rc
 
 
-def convert(gtfs_src, publisher, fname):
+def convert(gtfs_src, publisher, fname, netex_dir):
     """
     Converts a given gtfs file and returns the path to the generated netex zip file.
     The publisher is the name of the organization that published that dataset.
     """
-    with tempfile.TemporaryDirectory() as netex_dir:
-        logging.info(f"Start converting {gtfs_src} to {netex_dir}")
+    logging.info(f"Start converting {gtfs_src} to {netex_dir}")
 
-        ret = _run_command(
-            [
-                CONVERTER,
-                "--input",
-                gtfs_src,
-                "--output",
-                netex_dir,
-                "--participant",
-                publisher,
-            ]
-        )
-        logging.debug(f"Conversion done with return code {ret}")
-        if ret == 0:
-            netex_zip = f"{fname}.netex"
-            shutil.make_archive(netex_zip, "zip", netex_dir)
-            return f"{netex_zip}.zip"
+    ret = _run_command(
+        [
+            CONVERTER,
+            "--input",
+            gtfs_src,
+            "--output",
+            netex_dir,
+            "--participant",
+            publisher,
+        ]
+    )
+    logging.debug(f"Conversion done with return code {ret}")
+    if ret == 0:
+        netex_zip = f"{fname}.netex"
+        shutil.make_archive(netex_zip, "zip", netex_dir)
+        return f"{netex_zip}.zip"
 
-        raise Exception("Unable to convert file")
+    raise Exception("Unable to convert file")
 
 
-def download_and_convert(url, publisher):
+def download_and_convert(url, publisher, netex_dir):
     gtfs, fname = download_gtfs(url)
-    return convert(gtfs, publisher, fname)
+    return convert(gtfs, publisher, fname, netex_dir)
