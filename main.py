@@ -13,6 +13,7 @@ from waitress import serve
 from flask import Flask, request, make_response
 from pylogctx import context as log_context
 from logging import config
+import tempfile
 
 from gtfs2netexfr import download_and_convert
 from datagouv_publisher import publish_to_datagouv
@@ -56,9 +57,10 @@ def worker():
                 f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}"
             )
             try:
-                netex = download_and_convert(item["url"], PUBLISHER)
-                logging.debug(f"Got a netex repooo {netex}")
-                publish_to_datagouv(item["datagouv_id"], netex)
+                with tempfile.TemporaryDirectory() as netex_dir:
+                    netex = download_and_convert(item["url"], PUBLISHER, netex_dir)
+                    logging.debug(f"Got a netex file: {netex}")
+                    publish_to_datagouv(item["datagouv_id"], netex)
 
             except Exception as err:
                 logging.error(f"Conversion for url {item['url']} failed: {err}")
