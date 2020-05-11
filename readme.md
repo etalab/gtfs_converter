@@ -29,3 +29,5 @@ Then you can run any function in the file like:
 The functions available are:
 * `get_all_netex`: print all the datasets with their netex community resources
 * `delete_all_netex`: delete the netex files created by transport.data.gouv.fr as community resource.
+* `get_netex_duplicates`: print all the datasets that have duplicated netex files (with same names)
+* `delete_old_netex_duplicates`: delete the old netex duplicates (only keep the last one)
