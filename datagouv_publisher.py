@@ -8,6 +8,10 @@ TRANSPORT_ORGANIZATION_ID = os.environ["TRANSPORT_ORGANIZATION_ID"]
 DATAGOUV_API_KEY = os.environ["DATAGOUV_API_KEY"]
 
 
+def _format_title_as_datagouv(title):
+    return title.replace("_", "-").lower()
+
+
 def find_community_resources(dataset_id, netex_file):
     """
     Checks if the a community resource already exists
@@ -24,7 +28,12 @@ def find_community_resources(dataset_id, netex_file):
 
     if data is not None:
         # Note: datagouv lowercase the file names, so we do the same
-        filtered = [r for r in data if r["title"].lower() == netex_file.lower()]
+        filtered = [
+            r
+            for r in data
+            if _format_title_as_datagouv(r["title"])
+            == _format_title_as_datagouv(netex_file)
+        ]
         logging.debug("community resources: %s", [r["title"] for r in data])
         if len(filtered) == 0:
             logging.debug("Found the dataset %s, but no existing ressource", dataset_id)
