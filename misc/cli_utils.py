@@ -3,6 +3,7 @@ import requests
 import os
 import logging
 import fire
+import collections
 
 
 logging.basicConfig(
@@ -85,7 +86,15 @@ def delete_all_netex():
         _delete_dataset_netex(d["datagouv_id"])
 
 
-def get_all_netex():
+def _get_duplicated_resources(community_resources):
+    r_by_keys = collections.defaultdict(list)
+    for r in community_resources:
+        r_by_keys[r["title"]].append(r)
+
+    return [(k, v) for (k, v) in r_by_keys.items() if len(v) > 1]
+
+
+def get_netex_duplicates():
     r = requests.get("https://transport.data.gouv.fr/api/datasets")
     r.raise_for_status()
     datasets = r.json()
@@ -99,10 +108,45 @@ def get_all_netex():
         if not rs:
             continue
 
-        logging.info(f"resource for dataset {d['id']}")
+        duplicated_resources = _get_duplicated_resources(rs)
+        if duplicated_resources:
+            logging.info(f"dup for dataset {d['id']}")
+            for dup in duplicated_resources:
+                logging.info(f"- {dup[0]}")
+                for r in dup[1]:
+                    logging.info(f" * {r['id']} ({r['last_modified']})")
 
-        for r in rs:
-            logging.info(f"* {r['title']} -- {r['id']}")
+
+def delete_old_netex_duplicates():
+    logging.warn("DELETING OLD NETEX DUPLICATES!")
+    r = requests.get("https://transport.data.gouv.fr/api/datasets")
+    r.raise_for_status()
+    datasets = r.json()
+
+    for d in datasets:
+        dataset_name = d["title"]
+        if d["type"] != "public-transit":
+            continue
+
+        rs = _find_community_resources(d["datagouv_id"])
+        if not rs:
+            continue
+
+        duplicated_resources = _get_duplicated_resources(rs)
+        if duplicated_resources:
+            logging.info(f"dup for dataset {d['id']}")
+            for dr in duplicated_resources:
+                logging.info(f"- {dr[0]}")
+                duplicates = dr[1]
+                duplicates.sort(key=lambda r: r["last_modified"])
+                oldest = duplicates[:-1]
+
+                logging.info(
+                    f"  keeping {duplicates[-1]['id']} ({duplicates[-1]['last_modified']})"
+                )
+                for r in oldest:
+                    logging.info(f"   * removing old {r['id']} ({r['last_modified']})")
+                    _delete_community_resources(d["id"], [r])
 
 
 if __name__ == "__main__":
