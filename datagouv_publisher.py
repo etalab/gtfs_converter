@@ -107,9 +107,9 @@ def update_resource_metadata(dataset_id, resource):
     resource["organization"] = TRANSPORT_ORGANIZATION_ID
     resource[
         "description"
-    ] = """Converstion du fichier automatique du fichier GTFS au format NeTEx (profil France)
+    ] = """Conversion du fichier automatique du fichier GTFS au format NeTEx (profil France)
 
-La conversion est effecutée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
+La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
     """
     resource["format"] = "NeTEx"
 
