@@ -109,8 +109,8 @@ for i in range(nb_threads):
 app = Flask(__name__)
 
 
-@app.route("/gtfs2netexfr")
-def gtfs2netex():
+@app.route("/convert")
+def convert():
     datagouv_id = request.args.get("datagouv_id")
     url = request.args.get("url")
     if datagouv_id and url:
@@ -127,6 +127,12 @@ def gtfs2netex():
         return make_response("url and datagouv_id parameters are required", 400)
 
 
+@app.route("/gtfs2netexfr")
+def gtfs2netex():
+    # for retrocompatibility, we keep the old /gtfs2netexfr route
+    return convert()
+
+
 @app.route("/stats")
 def stats():
     return {"nb_queued_elements": q.qsize()}
@@ -140,7 +146,7 @@ def queue():
 
 @app.route("/")
 def index():
-    return "Hello, have a look at /gtfs2netex. Nothing else here."
+    return "Hello, have a look at /convert. Nothing else here."
 
 
 serve(app, listen="*:8080")
