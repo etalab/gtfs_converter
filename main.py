@@ -6,6 +6,7 @@ and upload them as community resources to transport.data.gouv.fr
 
 import logging
 import os
+import utils
 import queue
 import threading
 import datetime
@@ -15,7 +16,7 @@ from pylogctx import context as log_context
 from logging import config
 import tempfile
 
-from gtfs2netexfr import download_and_convert
+import gtfs2netexfr
 from datagouv_publisher import publish_to_datagouv
 
 logging.config.dictConfig(
@@ -39,9 +40,22 @@ logging.config.dictConfig(
     }
 )
 
-PUBLISHER = os.environ.get("PUBLISHER", "transport.data.gouv.fr")
-
 q = queue.SimpleQueue()
+
+
+def convert_to_netex(gtfs, file_name, datagouv_id):
+    with tempfile.TemporaryDirectory() as netex_dir:
+        netex = gtfs2netexfr.convert(gtfs, file_name, netex_dir)
+        logging.debug(f"Got a netex file: {netex}")
+        publish_to_datagouv(datagouv_id, netex)
+
+
+def convert_to_geojson(gtfs, file_name, datagouv_id):
+    # with tempfile.TemporaryDirectory() as tmp_dir:
+    #     geojson = geojson.convert(tmp_dir)
+    #     logging.debug(f"Got a netex file: {geojson}")
+    #     publish_to_datagouv(datagouv_id, geojson)
+    pass
 
 
 def worker():
@@ -57,13 +71,14 @@ def worker():
                 f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}"
             )
             try:
-                with tempfile.TemporaryDirectory() as netex_dir:
-                    netex = download_and_convert(item["url"], PUBLISHER, netex_dir)
-                    logging.debug(f"Got a netex file: {netex}")
-                    publish_to_datagouv(item["datagouv_id"], netex)
+                gtfs, fname = utils.download_gtfs(item["url"])
+
+                convert_to_netex(gtfs, fname, item["datagouv_id"])
+                convert_to_geojson(gtfs, fname, item["datagouv_id"])
 
             except Exception as err:
-                logging.error(f"Conversion for url {item['url']} failed: {err}")
+                logging.error(
+                    f"Conversion for url {item['url']} failed: {err}")
             finally:
                 q.task_done()
 
