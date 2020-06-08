@@ -92,7 +92,7 @@ def find_or_create_community_resource(dataset_id, netex_file):
     return create_community_resource(dataset_id, netex_file)
 
 
-def update_resource_metadata(dataset_id, resource):
+def update_resource_metadata(dataset_id, resource, additional_metadata):
     """
     Updates metadata of the resources.
 
@@ -103,15 +103,9 @@ def update_resource_metadata(dataset_id, resource):
     Does not return
     """
     logging.debug("Updating metadata of resource %s", resource["id"])
+    resource.update(additional_metadata)
     resource["dataset"] = dataset_id
     resource["organization"] = TRANSPORT_ORGANIZATION_ID
-    resource[
-        "description"
-    ] = """Conversion du fichier automatique du fichier GTFS au format NeTEx (profil France)
-
-La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
-    """
-    resource["format"] = "NeTEx"
 
     url = f"{DATAGOUV_API}/datasets/community_resources/{resource['id']}/"
     headers = {"X-API-KEY": DATAGOUV_API_KEY}
@@ -135,32 +129,32 @@ def upload_resource(resource_id, filename):
     logging.debug("Uploading done")
 
 
-def publish_to_datagouv(dataset_id, netex_file):
+def publish_to_datagouv(dataset_id, new_file, additional_metadata):
     """
-    This will publish the netex file as a community resource of the dataset.
+    This will publish the converted file as a community resource of the dataset.
 
     If the community resource already existed, it will be updated
     """
     try:
         logging.info(
             "Going to add the file %s as community ressource to the dataset %s",
-            netex_file,
+            new_file,
             dataset_id,
         )
-        community_resource = find_or_create_community_resource(dataset_id, netex_file)
-        update_resource_metadata(dataset_id, community_resource)
-        logging.info("Added %s to the dataset %s", netex_file, dataset_id)
+        community_resource = find_or_create_community_resource(dataset_id, new_file)
+        update_resource_metadata(dataset_id, community_resource, additional_metadata)
+        logging.info("Added %s to the dataset %s", new_file, dataset_id)
     except requests.HTTPError as err:
         logging.warning(
             "Unable to add %s to the dataset %s. Http Error %s",
-            netex_file,
+            new_file,
             dataset_id,
             err,
         )
     except Exception as err:
         logging.warning(
             "Unable to add %s to the dataset %s. Generic Error %s",
-            netex_file,
+            new_file,
             dataset_id,
             err,
         )

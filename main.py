@@ -17,6 +17,7 @@ from logging import config
 import tempfile
 
 import gtfs2netexfr
+import gtfs2geojson
 from datagouv_publisher import publish_to_datagouv
 
 logging.config.dictConfig(
@@ -47,14 +48,28 @@ def convert_to_netex(gtfs, file_name, datagouv_id):
     with tempfile.TemporaryDirectory() as netex_dir:
         netex = gtfs2netexfr.convert(gtfs, file_name, netex_dir)
         logging.debug(f"Got a netex file: {netex}")
-        publish_to_datagouv(datagouv_id, netex)
+        metadata = {
+            "description": """Conversion automatique du fichier GTFS au format NeTEx (profil France)
+
+La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
+    """,
+            "format": "NeTEx",
+        }
+        publish_to_datagouv(datagouv_id, netex, metadata)
 
 
 def convert_to_geojson(gtfs, file_name, datagouv_id):
-    # with tempfile.TemporaryDirectory() as tmp_dir:
-    #     geojson = geojson.convert(tmp_dir)
-    #     logging.debug(f"Got a netex file: {geojson}")
-    #     publish_to_datagouv(datagouv_id, geojson)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        geojson = gtfs2geojson.convert(gtfs, file_name, tmp_dir)
+        logging.debug(f"Got a geojson file: {geojson}")
+        metadata = {
+            "description": """Création automatique d'un fichier geojson à partir du fichier GTFS.
+            
+Le fichier est généré par transport.data.gouv.fr en utilisant l'outil https://gitlab.com/CodeursEnLiberte/gtfs-to-geojson/
+    """,
+            "format": "geojson",
+        }
+        publish_to_datagouv(datagouv_id, geojson, metadata)
     pass
 
 
@@ -73,12 +88,11 @@ def worker():
             try:
                 gtfs, fname = utils.download_gtfs(item["url"])
 
-                convert_to_netex(gtfs, fname, item["datagouv_id"])
+                # convert_to_netex(gtfs, fname, item["datagouv_id"])
                 convert_to_geojson(gtfs, fname, item["datagouv_id"])
 
             except Exception as err:
-                logging.error(
-                    f"Conversion for url {item['url']} failed: {err}")
+                logging.error(f"Conversion for url {item['url']} failed: {err}")
             finally:
                 q.task_done()
 
