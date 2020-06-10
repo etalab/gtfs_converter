@@ -75,24 +75,27 @@ def worker():
     while True:
         item = q.get()
         if item is None:
-            logging.warn("The queue recieved an empty item")
+            logging.warn("The queue received an empty item")
             break
 
         with log_context(task_id=item["datagouv_id"]):
             logging.info(
-                f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}"
+                f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']} and {item['conversion_type']} conversions"
             )
-            try:
-                gtfs, fname = utils.download_gtfs(item["url"])
 
-                # convert_to_netex(gtfs, fname, item["datagouv_id"])
-                convert_to_geojson(gtfs, fname, item["datagouv_id"])
+            gtfs, fname = utils.download_gtfs(item["url"])
 
-            except Exception as err:
-                logging.error(
-                    f"Conversion for url {item['url']} failed: {err}")
-            finally:
-                q.task_done()
+            for conversion in item['conversion_type']:
+                try:
+                    if conversion == "gtfs2netex":
+                        convert_to_netex(gtfs, fname, item["datagouv_id"])
+                    if conversion == "gtfs2geojson":
+                        convert_to_geojson(gtfs, fname, item["datagouv_id"])
+                except Exception as err:
+                    logging.error(
+                        f"Conversion {conversion} for url {item['url']} failed: {err}")
+
+            q.task_done()
 
 
 q = queue.Queue()
@@ -107,8 +110,7 @@ for i in range(nb_threads):
 app = Flask(__name__)
 
 
-@app.route("/convert")
-def convert():
+def convert(conversion_type):
     datagouv_id = request.args.get("datagouv_id")
     url = request.args.get("url")
     if datagouv_id and url:
@@ -117,9 +119,11 @@ def convert():
                 "url": url,
                 "datagouv_id": datagouv_id,
                 "task_date": datetime.datetime.today(),
+                "conversion_type": conversion_type
             }
         )
-        logging.info(f"Enquing {url} for datagouv_id {datagouv_id}")
+        logging.info(
+            f"Enquing {url} for datagouv_id {datagouv_id}, for {conversion_type} conversion(s)")
         return "The request was put in a queue"
     else:
         return make_response("url and datagouv_id parameters are required", 400)
@@ -127,8 +131,17 @@ def convert():
 
 @app.route("/gtfs2netexfr")
 def gtfs2netex():
-    # for retrocompatibility, we keep the old /gtfs2netexfr route
-    return convert()
+    return convert(["gtfs2netex"])
+
+
+@app.route("/geojson")
+def gtfs2geojson():
+    return convert(["gtfs2geojson"])
+
+
+@app.route("/convert_to_netex_and_geojson")
+def convert_to_netex_and_geojson():
+    return convert(["gtfs2netex", "gtfs2geojson"])
 
 
 @app.route("/stats")
