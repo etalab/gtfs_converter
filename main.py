@@ -16,7 +16,7 @@ from pylogctx import context as log_context
 from logging import config
 import tempfile
 
-# import gtfs2netexfr
+import gtfs2netexfr
 import gtfs2geojson
 from datagouv_publisher import publish_to_datagouv
 
@@ -42,18 +42,18 @@ logging.config.dictConfig(
 )
 
 
-# def convert_to_netex(gtfs, file_name, datagouv_id):
-#     with tempfile.TemporaryDirectory() as netex_dir:
-#         netex = gtfs2netexfr.convert(gtfs, file_name, netex_dir)
-#         logging.debug(f"Got a netex file: {netex}")
-#         metadata = {
-#             "description": """Conversion automatique du fichier GTFS au format NeTEx (profil France)
+def convert_to_netex(gtfs, file_name, datagouv_id):
+    with tempfile.TemporaryDirectory() as netex_dir:
+        netex = gtfs2netexfr.convert(gtfs, file_name, netex_dir)
+        logging.debug(f"Got a netex file: {netex}")
+        metadata = {
+            "description": """Conversion automatique du fichier GTFS au format NeTEx (profil France)
 
-# La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
-#     """,
-#             "format": "NeTEx",
-#         }
-#         publish_to_datagouv(datagouv_id, netex, metadata)
+La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
+    """,
+            "format": "NeTEx",
+        }
+        publish_to_datagouv(datagouv_id, netex, metadata)
 
 
 def convert_to_geojson(gtfs, file_name, datagouv_id):
@@ -86,15 +86,16 @@ def worker():
 
             gtfs, fname = utils.download_gtfs(item["url"])
 
-            for conversion in item['conversion_type']:
+            for conversion in item["conversion_type"]:
                 try:
-                    # if conversion == "gtfs2netex":
-                    #     convert_to_netex(gtfs, fname, item["datagouv_id"])
+                    if conversion == "gtfs2netex":
+                        convert_to_netex(gtfs, fname, item["datagouv_id"])
                     if conversion == "gtfs2geojson":
                         convert_to_geojson(gtfs, fname, item["datagouv_id"])
                 except Exception as err:
                     logging.error(
-                        f"Conversion {conversion} for url {item['url']} failed: {err}")
+                        f"Conversion {conversion} for url {item['url']} failed: {err}"
+                    )
 
             q.task_done()
 
@@ -111,8 +112,7 @@ for i in range(nb_threads):
 app = Flask(__name__)
 
 
-def convert(conversion_type):
-    print(request.args)
+def _convert(conversion_type):
     datagouv_id = request.args.get("datagouv_id")
     url = request.args.get("url")
     if datagouv_id and url:
@@ -121,29 +121,30 @@ def convert(conversion_type):
                 "url": url,
                 "datagouv_id": datagouv_id,
                 "task_date": datetime.datetime.today(),
-                "conversion_type": conversion_type
+                "conversion_type": conversion_type,
             }
         )
         logging.info(
-            f"Enquing {url} for datagouv_id {datagouv_id}, for {conversion_type} conversion(s)")
+            f"Enquing {url} for datagouv_id {datagouv_id}, for {conversion_type} conversion(s)"
+        )
         return "The request was put in a queue"
     else:
         return make_response("url and datagouv_id parameters are required", 400)
 
 
 @app.route("/gtfs2netexfr")
-def gtfs2netex():
-    return convert(["gtfs2netex"])
+def convert_gtfs_to_netex():
+    return _convert(["gtfs2netex"])
 
 
-@app.route("/geojson")
-def gtfs2geojson():
-    return convert(["gtfs2geojson"])
+@app.route("/gtfs2geojson")
+def convert_gtfs_to_geojson():
+    return _convert(["gtfs2geojson"])
 
 
 @app.route("/convert_to_netex_and_geojson")
-def convert_to_netex_and_geojson():
-    return convert(["gtfs2netex", "gtfs2geojson"])
+def convert_gtfs_to_netex_and_geojson():
+    return _convert(["gtfs2netex", "gtfs2geojson"])
 
 
 @app.route("/stats")
