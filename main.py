@@ -13,9 +13,10 @@ import datetime
 from waitress import serve
 from flask import Flask, request, make_response
 from pylogctx import context as log_context
+from logging import config
 import tempfile
 
-import gtfs2netexfr
+# import gtfs2netexfr
 import gtfs2geojson
 from datagouv_publisher import publish_to_datagouv
 
@@ -41,18 +42,18 @@ logging.config.dictConfig(
 )
 
 
-def convert_to_netex(gtfs, file_name, datagouv_id):
-    with tempfile.TemporaryDirectory() as netex_dir:
-        netex = gtfs2netexfr.convert(gtfs, file_name, netex_dir)
-        logging.debug(f"Got a netex file: {netex}")
-        metadata = {
-            "description": """Conversion automatique du fichier GTFS au format NeTEx (profil France)
+# def convert_to_netex(gtfs, file_name, datagouv_id):
+#     with tempfile.TemporaryDirectory() as netex_dir:
+#         netex = gtfs2netexfr.convert(gtfs, file_name, netex_dir)
+#         logging.debug(f"Got a netex file: {netex}")
+#         metadata = {
+#             "description": """Conversion automatique du fichier GTFS au format NeTEx (profil France)
 
-La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
-    """,
-            "format": "NeTEx",
-        }
-        publish_to_datagouv(datagouv_id, netex, metadata)
+# La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
+#     """,
+#             "format": "NeTEx",
+#         }
+#         publish_to_datagouv(datagouv_id, netex, metadata)
 
 
 def convert_to_geojson(gtfs, file_name, datagouv_id):
@@ -87,8 +88,8 @@ def worker():
 
             for conversion in item['conversion_type']:
                 try:
-                    if conversion == "gtfs2netex":
-                        convert_to_netex(gtfs, fname, item["datagouv_id"])
+                    # if conversion == "gtfs2netex":
+                    #     convert_to_netex(gtfs, fname, item["datagouv_id"])
                     if conversion == "gtfs2geojson":
                         convert_to_geojson(gtfs, fname, item["datagouv_id"])
                 except Exception as err:
@@ -111,6 +112,7 @@ app = Flask(__name__)
 
 
 def convert(conversion_type):
+    print(request.args)
     datagouv_id = request.args.get("datagouv_id")
     url = request.args.get("url")
     if datagouv_id and url:
