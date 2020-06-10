@@ -12,15 +12,25 @@ RUN wget https://github.com/OSGeo/proj.4/releases/download/${PROJ_VERSION}/proj-
     make install
 
 WORKDIR /
-RUN git clone https://github.com/CanalTP/transit_model.git
 
+ADD https://api.github.com/repos/CanalTP/transit_model/git/refs/heads/master version.json
+RUN git clone --depth=1 --branch master --single-branch https://github.com/CanalTP/transit_model.git
 WORKDIR /transit_model/gtfs2netexfr
 RUN cargo build --release
 RUN strip ../target/release/gtfs2netexfr
 
+ADD https://gitlab.com/api/v4/projects/17544282/repository/branches/master version.json
+RUN git clone --depth=1 --branch master --single-branch https://gitlab.com/CodeursEnLiberte/gtfs-to-geojson.git
+WORKDIR /gtfs-to-geojson
+RUN cargo build --release
+RUN strip ./target/release/gtfs-geojson
+
+
 FROM python:3.8-slim
 COPY --from=builder /transit_model/target/release/gtfs2netexfr /usr/local/bin/gtfs2netexfr
+COPY --from=builder /gtfs-to-geojson/target/release/gtfs-geojson /usr/local/bin/gtfs-geojson
 ENV NETEX_CONVERTER gtfs2netexfr
+ENV GEOJSON._CONVERTER gtfs-geojson
 
 # copy libproj and its assets
 COPY --from=builder /usr/lib/libproj* /usr/lib /usr/lib/

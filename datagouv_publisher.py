@@ -12,12 +12,12 @@ def _format_title_as_datagouv(title):
     return title.replace("_", "-").lower()
 
 
-def find_community_resources(dataset_id, netex_file):
+def find_community_resources(dataset_id, new_file):
     """
     Checks if the a community resource already exists
     """
     logging.debug(
-        "Searching community ressource %s in dataset %s", netex_file, dataset_id
+        "Searching community ressource %s in dataset %s", new_file, dataset_id
     )
     url = f"{DATAGOUV_API}/datasets/community_resources/"
     params = {"dataset": dataset_id, "organization": TRANSPORT_ORGANIZATION_ID}
@@ -25,6 +25,7 @@ def find_community_resources(dataset_id, netex_file):
     ret.raise_for_status()
 
     data = ret.json()["data"]
+    file_name = os.path.basename(new_file)
 
     if data is not None:
         # Note: datagouv lowercase the file names, so we do the same
@@ -32,8 +33,9 @@ def find_community_resources(dataset_id, netex_file):
             r
             for r in data
             if _format_title_as_datagouv(r["title"])
-            == _format_title_as_datagouv(netex_file)
+            == _format_title_as_datagouv(file_name)
         ]
+        logging.debug("title = %s", _format_title_as_datagouv(file_name))
         logging.debug("community resources: %s", [r["title"] for r in data])
         if len(filtered) == 0:
             logging.debug("Found the dataset %s, but no existing ressource", dataset_id)
@@ -42,7 +44,7 @@ def find_community_resources(dataset_id, netex_file):
         if len(filtered) > 1:
             logging.warning(
                 "More that one community resource %s in dataset %s",
-                netex_file,
+                file_name,
                 dataset_id,
             )
         logging.debug(
@@ -78,18 +80,18 @@ def create_community_resource(dataset_id, netex_file):
     return json
 
 
-def find_or_create_community_resource(dataset_id, netex_file):
+def find_or_create_community_resource(dataset_id, new_file):
     """
     When publishing a file, either the community resource already existed,
     then we only update the file.
 
     Otherwise we create a new resource
     """
-    community_resource = find_community_resources(dataset_id, netex_file)
+    community_resource = find_community_resources(dataset_id, new_file)
     if community_resource is not None:
-        upload_resource(community_resource["id"], netex_file)
+        upload_resource(community_resource["id"], new_file)
         return community_resource
-    return create_community_resource(dataset_id, netex_file)
+    return create_community_resource(dataset_id, new_file)
 
 
 def update_resource_metadata(dataset_id, resource, additional_metadata):
