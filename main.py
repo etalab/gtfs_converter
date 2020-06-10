@@ -6,6 +6,7 @@ and upload them as community resources to transport.data.gouv.fr
 
 import logging
 import os
+import utils
 import queue
 import threading
 import datetime
@@ -15,7 +16,8 @@ from pylogctx import context as log_context
 from logging import config
 import tempfile
 
-from gtfs2netexfr import download_and_convert
+import gtfs2netexfr
+import gtfs2geojson
 from datagouv_publisher import publish_to_datagouv
 
 logging.config.dictConfig(
@@ -39,9 +41,35 @@ logging.config.dictConfig(
     }
 )
 
-PUBLISHER = os.environ.get("PUBLISHER", "transport.data.gouv.fr")
 
-q = queue.SimpleQueue()
+def convert_to_netex(gtfs, file_name, datagouv_id):
+    with tempfile.TemporaryDirectory() as netex_dir:
+        netex = gtfs2netexfr.convert(gtfs, file_name, netex_dir)
+        logging.debug(f"Got a netex file: {netex}")
+        metadata = {
+            "description": """Conversion automatique du fichier GTFS au format NeTEx (profil France)
+
+La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
+    """,
+            "format": "NeTEx",
+        }
+        publish_to_datagouv(datagouv_id, netex, metadata)
+
+
+def convert_to_geojson(gtfs, file_name, datagouv_id):
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        geojson = gtfs2geojson.convert(gtfs, file_name, tmp_dir)
+        logging.debug(f"Got a geojson file: {geojson}")
+        metadata = {
+            "description": """Création automatique d'un fichier geojson à partir du fichier GTFS.
+
+Le fichier est généré par transport.data.gouv.fr en utilisant l'outil https://gitlab.com/CodeursEnLiberte/gtfs-to-geojson/
+    """,
+            "format": "geojson",
+            "mime": "application/json",
+        }
+        publish_to_datagouv(datagouv_id, geojson, metadata)
+    pass
 
 
 def worker():
@@ -49,23 +77,28 @@ def worker():
     while True:
         item = q.get()
         if item is None:
-            logging.warn("The queue recieved an empty item")
+            logging.warn("The queue received an empty item")
             break
 
         with log_context(task_id=item["datagouv_id"]):
             logging.info(
-                f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']}"
+                f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']} and {item['conversion_type']} conversions"
             )
-            try:
-                with tempfile.TemporaryDirectory() as netex_dir:
-                    netex = download_and_convert(item["url"], PUBLISHER, netex_dir)
-                    logging.debug(f"Got a netex file: {netex}")
-                    publish_to_datagouv(item["datagouv_id"], netex)
 
-            except Exception as err:
-                logging.error(f"Conversion for url {item['url']} failed: {err}")
-            finally:
-                q.task_done()
+            gtfs, fname = utils.download_gtfs(item["url"])
+
+            for conversion in item["conversion_type"]:
+                try:
+                    if conversion == "gtfs2netex":
+                        convert_to_netex(gtfs, fname, item["datagouv_id"])
+                    if conversion == "gtfs2geojson":
+                        convert_to_geojson(gtfs, fname, item["datagouv_id"])
+                except Exception as err:
+                    logging.error(
+                        f"Conversion {conversion} for url {item['url']} failed: {err}"
+                    )
+
+            q.task_done()
 
 
 q = queue.Queue()
@@ -80,8 +113,7 @@ for i in range(nb_threads):
 app = Flask(__name__)
 
 
-@app.route("/gtfs2netexfr")
-def gtfs2netex():
+def _convert(conversion_type):
     datagouv_id = request.args.get("datagouv_id")
     url = request.args.get("url")
     if datagouv_id and url:
@@ -90,12 +122,30 @@ def gtfs2netex():
                 "url": url,
                 "datagouv_id": datagouv_id,
                 "task_date": datetime.datetime.today(),
+                "conversion_type": conversion_type,
             }
         )
-        logging.info(f"Enquing {url} for datagouv_id {datagouv_id}")
+        logging.info(
+            f"Enquing {url} for datagouv_id {datagouv_id}, for {conversion_type} conversion(s)"
+        )
         return "The request was put in a queue"
     else:
         return make_response("url and datagouv_id parameters are required", 400)
+
+
+@app.route("/gtfs2netexfr")
+def convert_gtfs_to_netex():
+    return _convert(["gtfs2netex"])
+
+
+@app.route("/gtfs2geojson")
+def convert_gtfs_to_geojson():
+    return _convert(["gtfs2geojson"])
+
+
+@app.route("/convert_to_netex_and_geojson")
+def convert_gtfs_to_netex_and_geojson():
+    return _convert(["gtfs2netex", "gtfs2geojson"])
 
 
 @app.route("/stats")
@@ -111,7 +161,7 @@ def queue():
 
 @app.route("/")
 def index():
-    return "Hello, have a look at /gtfs2netex. Nothing else here."
+    return "Hello, have a look at /gtfs2netexfr or /gtfs2geojson. Nothing else here."
 
 
 serve(app, listen="*:8080")
