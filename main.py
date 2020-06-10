@@ -161,7 +161,7 @@ def queue():
 
 @app.route("/")
 def index():
-    return "Hello, have a look at /convert. Nothing else here."
+    return "Hello, have a look at /gtfs2netexfr or /gtfs2geojson. Nothing else here."
 
 
 serve(app, listen="*:8080")
