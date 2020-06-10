@@ -66,6 +66,7 @@ def convert_to_geojson(gtfs, file_name, datagouv_id):
 Le fichier est généré par transport.data.gouv.fr en utilisant l'outil https://gitlab.com/CodeursEnLiberte/gtfs-to-geojson/
     """,
             "format": "geojson",
+            "mime": "application/json",
         }
         publish_to_datagouv(datagouv_id, geojson, metadata)
     pass
