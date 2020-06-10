@@ -13,7 +13,6 @@ import datetime
 from waitress import serve
 from flask import Flask, request, make_response
 from pylogctx import context as log_context
-from logging import config
 import tempfile
 
 import gtfs2netexfr
@@ -64,7 +63,7 @@ def convert_to_geojson(gtfs, file_name, datagouv_id):
         logging.debug(f"Got a geojson file: {geojson}")
         metadata = {
             "description": """Création automatique d'un fichier geojson à partir du fichier GTFS.
-            
+
 Le fichier est généré par transport.data.gouv.fr en utilisant l'outil https://gitlab.com/CodeursEnLiberte/gtfs-to-geojson/
     """,
             "format": "geojson",
@@ -92,7 +91,8 @@ def worker():
                 convert_to_geojson(gtfs, fname, item["datagouv_id"])
 
             except Exception as err:
-                logging.error(f"Conversion for url {item['url']} failed: {err}")
+                logging.error(
+                    f"Conversion for url {item['url']} failed: {err}")
             finally:
                 q.task_done()
 
