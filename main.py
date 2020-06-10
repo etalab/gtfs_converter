@@ -40,8 +40,6 @@ logging.config.dictConfig(
     }
 )
 
-q = queue.SimpleQueue()
-
 
 def convert_to_netex(gtfs, file_name, datagouv_id):
     with tempfile.TemporaryDirectory() as netex_dir:
