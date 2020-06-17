@@ -85,18 +85,18 @@ def worker():
                 f"Dequeing {item['url']} for datagouv_id {item['datagouv_id']} and {item['conversion_type']} conversions"
             )
 
-            gtfs, fname = utils.download_gtfs(item["url"])
+            try:
+                gtfs, fname = utils.download_gtfs(item["url"])
 
-            for conversion in item["conversion_type"]:
-                try:
+                for conversion in item["conversion_type"]:
                     if conversion == "gtfs2netex":
                         convert_to_netex(gtfs, fname, item["datagouv_id"])
                     if conversion == "gtfs2geojson":
                         convert_to_geojson(gtfs, fname, item["datagouv_id"])
-                except Exception as err:
-                    logging.error(
-                        f"Conversion {conversion} for url {item['url']} failed: {err}"
-                    )
+            except Exception as err:
+                logging.exception(
+                    f"Conversion {conversion} for url {item['url']} failed"
+                )
 
             q.task_done()
 
