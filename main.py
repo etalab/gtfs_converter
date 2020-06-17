@@ -95,7 +95,7 @@ def worker():
                         convert_to_geojson(gtfs, fname, item["datagouv_id"])
             except Exception as err:
                 logging.exception(
-                    f"Conversion {conversion} for url {item['url']} failed"
+                    f"Conversion {item['conversion_type']} for url {item['url']} failed"
                 )
 
             q.task_done()
