@@ -154,9 +154,4 @@ def publish_to_datagouv(dataset_id, new_file, additional_metadata):
             err,
         )
     except Exception as err:
-        logging.warning(
-            "Unable to add %s to the dataset %s. Generic Error %s",
-            new_file,
-            dataset_id,
-            err,
-        )
+        logging.exception("Unable to add %s to the dataset %s", new_file, dataset_id)

@@ -87,16 +87,21 @@ def worker():
 
             try:
                 gtfs, fname = utils.download_gtfs(item["url"])
+            except Exception as err:
+                logging.exception(f"dowload url {item['url']} failed")
+                q.task_done()
+                continue
 
-                for conversion in item["conversion_type"]:
+            for conversion in item["conversion_type"]:
+                try:
                     if conversion == "gtfs2netex":
                         convert_to_netex(gtfs, fname, item["datagouv_id"])
                     if conversion == "gtfs2geojson":
                         convert_to_geojson(gtfs, fname, item["datagouv_id"])
-            except Exception as err:
-                logging.exception(
-                    f"Conversion {item['conversion_type']} for url {item['url']} failed"
-                )
+                except Exception as err:
+                    logging.exception(
+                        f"Conversion {item['conversion_type']} for url {item['url']} failed"
+                    )
 
             q.task_done()
 
