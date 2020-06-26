@@ -118,7 +118,7 @@ def get_netex_duplicates():
 
 
 def delete_old_netex_duplicates():
-    logging.warn("DELETING OLD NETEX DUPLICATES!")
+    logging.warning("DELETING OLD NETEX DUPLICATES!")
     r = requests.get("https://transport.data.gouv.fr/api/datasets")
     r.raise_for_status()
     datasets = r.json()
