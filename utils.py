@@ -8,25 +8,15 @@ def run_command(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     while True:
         output = process.stdout.readline().decode()
-        if process.poll() is not None:
-            break
+        output_err = process.stderr.readline().decode()
         if output:
             logging.info(output.strip())
-    rc = process.poll()
-    return rc
-
-
-def run_command_no_log(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
-    full_output = []
-    while True:
-        output = process.stdout.readline().decode()
+        if output_err:
+            logging.error(output_err.strip())
         if process.poll() is not None:
             break
-        if output:
-            full_output.append(output)
     rc = process.poll()
-    return rc, full_output
+    return rc
 
 
 def download_gtfs(url):
