@@ -94,7 +94,7 @@ def find_or_create_community_resource(dataset_id, new_file):
     return create_community_resource(dataset_id, new_file)
 
 
-def update_resource_metadata(dataset_id, resource, additional_metadata):
+def update_resource_metadata(dataset_id, resource, additional_metadata, url):
     """
     Updates metadata of the resources.
 
@@ -108,6 +108,7 @@ def update_resource_metadata(dataset_id, resource, additional_metadata):
     resource.update(additional_metadata)
     resource["dataset"] = dataset_id
     resource["organization"] = TRANSPORT_ORGANIZATION_ID
+    resource["extras"] = {"transport:original_resource_url": url}
 
     url = f"{DATAGOUV_API}/datasets/community_resources/{resource['id']}/"
     headers = {"X-API-KEY": DATAGOUV_API_KEY}
@@ -131,7 +132,7 @@ def upload_resource(resource_id, filename):
     logging.debug("Uploading done")
 
 
-def publish_to_datagouv(dataset_id, new_file, additional_metadata):
+def publish_to_datagouv(dataset_id, new_file, additional_metadata, url):
     """
     This will publish the converted file as a community resource of the dataset.
 
@@ -144,7 +145,9 @@ def publish_to_datagouv(dataset_id, new_file, additional_metadata):
             dataset_id,
         )
         community_resource = find_or_create_community_resource(dataset_id, new_file)
-        update_resource_metadata(dataset_id, community_resource, additional_metadata)
+        update_resource_metadata(
+            dataset_id, community_resource, additional_metadata, url
+        )
         logging.info("Added %s to the dataset %s", new_file, dataset_id)
     except requests.HTTPError as err:
         logging.warning(
