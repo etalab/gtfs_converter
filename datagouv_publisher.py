@@ -6,13 +6,14 @@ import logging
 DATAGOUV_API = os.environ["DATAGOUV_API"]
 TRANSPORT_ORGANIZATION_ID = os.environ["TRANSPORT_ORGANIZATION_ID"]
 DATAGOUV_API_KEY = os.environ["DATAGOUV_API_KEY"]
+ORIGINAL_URL_KEY = "transport:original_resource_url"
 
 
 def _format_title_as_datagouv(title):
     return title.replace("_", "-").lower()
 
 
-def find_community_resources(dataset_id, new_file):
+def find_community_resources(dataset_id, new_file, resource_url):
     """
     Checks if the a community resource already exists
     """
@@ -33,10 +34,18 @@ def find_community_resources(dataset_id, new_file):
             r
             for r in data
             if _format_title_as_datagouv(r["title"])
-            == _format_title_as_datagouv(file_name)
+            == _format_title_as_datagouv(
+                file_name
+            )  # <- old way to find resource, remove once transition is done
+            or r.get("extras", {}).get(ORIGINAL_URL_KEY) == resource_url  # <- new way
         ]
-        logging.debug("title = %s", _format_title_as_datagouv(file_name))
-        logging.debug("community resources: %s", [r["title"] for r in data])
+        logging.debug(
+            "title = %s, url = %s", _format_title_as_datagouv(file_name), resource_url
+        )
+        logging.debug(
+            "community resources: %s",
+            [(r["title"], r.get("extras", {}).get(ORIGINAL_URL_KEY)) for r in data],
+        )
         if len(filtered) == 0:
             logging.debug("Found the dataset %s, but no existing ressource", dataset_id)
             return None
@@ -80,14 +89,14 @@ def create_community_resource(dataset_id, netex_file):
     return json
 
 
-def find_or_create_community_resource(dataset_id, new_file):
+def find_or_create_community_resource(dataset_id, new_file, url):
     """
     When publishing a file, either the community resource already existed,
     then we only update the file.
 
     Otherwise we create a new resource
     """
-    community_resource = find_community_resources(dataset_id, new_file)
+    community_resource = find_community_resources(dataset_id, new_file, url)
     if community_resource is not None:
         upload_resource(community_resource["id"], new_file)
         return community_resource
@@ -108,7 +117,7 @@ def update_resource_metadata(dataset_id, resource, additional_metadata, url):
     resource.update(additional_metadata)
     resource["dataset"] = dataset_id
     resource["organization"] = TRANSPORT_ORGANIZATION_ID
-    resource["extras"] = {"transport:original_resource_url": url}
+    resource["extras"] = {ORIGINAL_URL_KEY: url}
 
     url = f"{DATAGOUV_API}/datasets/community_resources/{resource['id']}/"
     headers = {"X-API-KEY": DATAGOUV_API_KEY}
@@ -144,7 +153,9 @@ def publish_to_datagouv(dataset_id, new_file, additional_metadata, url):
             new_file,
             dataset_id,
         )
-        community_resource = find_or_create_community_resource(dataset_id, new_file)
+        community_resource = find_or_create_community_resource(
+            dataset_id, new_file, url
+        )
         update_resource_metadata(
             dataset_id, community_resource, additional_metadata, url
         )
