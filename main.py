@@ -42,7 +42,7 @@ logging.config.dictConfig(
 )
 
 
-def convert_to_netex(gtfs, file_name, datagouv_id):
+def convert_to_netex(gtfs, file_name, datagouv_id, url):
     with tempfile.TemporaryDirectory() as netex_dir:
         netex = gtfs2netexfr.convert(gtfs, file_name, netex_dir)
         logging.debug(f"Got a netex file: {netex}")
@@ -52,11 +52,12 @@ def convert_to_netex(gtfs, file_name, datagouv_id):
 La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
     """,
             "format": "NeTEx",
+            "mime": "application/zip",
         }
-        publish_to_datagouv(datagouv_id, netex, metadata)
+        publish_to_datagouv(datagouv_id, netex, metadata, url)
 
 
-def convert_to_geojson(gtfs, file_name, datagouv_id):
+def convert_to_geojson(gtfs, file_name, datagouv_id, url):
     with tempfile.TemporaryDirectory() as tmp_dir:
         geojson = gtfs2geojson.convert(gtfs, file_name, tmp_dir)
         logging.debug(f"Got a geojson file: {geojson}")
@@ -68,7 +69,7 @@ Le fichier est généré par transport.data.gouv.fr en utilisant l'outil https:/
             "format": "geojson",
             "mime": "application/json",
         }
-        publish_to_datagouv(datagouv_id, geojson, metadata)
+        publish_to_datagouv(datagouv_id, geojson, metadata, url)
     pass
 
 
@@ -95,9 +96,11 @@ def worker():
             for conversion in item["conversion_type"]:
                 try:
                     if conversion == "gtfs2netex":
-                        convert_to_netex(gtfs, fname, item["datagouv_id"])
+                        convert_to_netex(gtfs, fname, item["datagouv_id"], item["url"])
                     if conversion == "gtfs2geojson":
-                        convert_to_geojson(gtfs, fname, item["datagouv_id"])
+                        convert_to_geojson(
+                            gtfs, fname, item["datagouv_id"], item["url"]
+                        )
                 except Exception as err:
                     logging.exception(
                         f"Conversion {item['conversion_type']} for url {item['url']} failed"
