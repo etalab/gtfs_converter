@@ -1,5 +1,4 @@
 Flask==1.1.2
-pyinvoke==1.0.4
 requests==2.23.0
 waitress==1.4.3
 pylogctx==1.12.0

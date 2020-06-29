@@ -1,9 +1,9 @@
 import logging
 import os
-import utils
 import tempfile
-from pylogctx import context as log_context
+from pylogctx import context as log_context  # type: ignore
 
+import utils
 import gtfs2netexfr
 import gtfs2geojson
 from datagouv_publisher import publish_to_datagouv
@@ -11,17 +11,25 @@ from datagouv_publisher import publish_to_datagouv
 
 def convert(params):
     with log_context(task_id=params["datagouv_id"]):
-        logging.info(
-            f"Dequeing {params['url']} for datagouv_id {params['datagouv_id']} and {params['conversion_type']} conversions"
-        )
+        try:
+            logging.info(
+                f"Dequeing {params['url']} for datagouv_id {params['datagouv_id']} and {params['conversion_type']} conversions"
+            )
 
-        gtfs, fname = utils.download_gtfs(params["url"])
+            gtfs, fname = utils.download_gtfs(params["url"])
 
-        for conversion in params["conversion_type"]:
-            if conversion == "gtfs2netex":
-                _convert_to_netex(gtfs, fname, params["datagouv_id"], params["url"])
-            if conversion == "gtfs2geojson":
-                _convert_to_geojson(gtfs, fname, params["datagouv_id"], params["url"])
+            for conversion in params["conversion_type"]:
+                if conversion == "gtfs2netex":
+                    _convert_to_netex(gtfs, fname, params["datagouv_id"], params["url"])
+                if conversion == "gtfs2geojson":
+                    _convert_to_geojson(
+                        gtfs, fname, params["datagouv_id"], params["url"]
+                    )
+
+            logging.info("job finished")
+        except:
+            logging.exception("job failed")
+            raise
 
 
 def _convert_to_netex(gtfs, file_name, datagouv_id, url):
