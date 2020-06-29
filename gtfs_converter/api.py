@@ -6,22 +6,20 @@ and upload them as community resources to transport.data.gouv.fr
 
 import logging
 import os
-import utils
 import queue
 import threading
 import datetime
 from waitress import serve
 from flask import Flask, request, make_response
-from pylogctx import context as log_context
 import tempfile
 from redis import Redis
-from rq import Queue
+from rq import Queue  # type: ignore
 
 import init_log
 from jobs import convert
 
 
-init_log.config()
+init_log.config_api_log()
 
 q = Queue(connection=Redis())
 
@@ -62,17 +60,6 @@ def convert_gtfs_to_geojson():
 @app.route("/convert_to_netex_and_geojson")
 def convert_gtfs_to_netex_and_geojson():
     return _convert(["gtfs2netex", "gtfs2geojson"])
-
-
-@app.route("/stats")
-def stats():
-    return {"nb_queued_elements": q.qsize()}
-
-
-@app.route("/queue")
-def queue():
-    elements = list(q.queue)
-    return {"queue": elements}
 
 
 @app.route("/")

@@ -2,14 +2,13 @@ import logging
 from logging import config
 
 
-def config():
+def config_worker_log():
     logging.config.dictConfig(
         {
             "version": 1,
             "formatters": {
                 "basic": {
-                    "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
-                    "format": "%(asctime)s -- %(levelname)s [%(threadName)s] -- %(message)s'",
+                    "format": "%(asctime)s [%(task_id)s] -- %(levelname)s -- %(message)s'"
                 }
             },
             "filters": {"context": {"()": "pylogctx.AddContextFilter"}},
@@ -22,4 +21,10 @@ def config():
             },
             "root": {"level": "DEBUG", "handlers": ["console"]},
         }
+    )
+
+
+def config_api_log():
+    logging.basicConfig(
+        level=logging.DEBUG, format="%(asctime)s -- %(levelname)s -- %(message)s"
     )
