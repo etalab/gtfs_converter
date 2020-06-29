@@ -16,12 +16,11 @@ from redis import Redis
 from rq import Queue  # type: ignore
 
 import init_log
-from jobs import convert
 
 
 init_log.config_api_log()
 
-q = Queue(connection=Redis())
+q = Queue(connection=Redis.from_url(os.environ.get("REDIS_URL") or "redis://"))
 
 app = Flask(__name__)
 
@@ -31,7 +30,7 @@ def _convert(conversion_type):
     url = request.args.get("url")
     if datagouv_id and url:
         q.enqueue(
-            convert,
+            "jobs.convert",
             {
                 "url": url,
                 "datagouv_id": datagouv_id,

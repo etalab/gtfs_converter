@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379"
+
+  dashboard:
+    # RQ dashboard to monitor the different jobs
+    image: eoranged/rq-dashboard
+    ports:
+      - "9181:9181"
+    environment:
+      - RQ_DASHBOARD_REDIS_URL=redis://redis:6379
+    depends_on:
+        - redis
+
+  api:
+    image: antoinede/gtfs2netexfr_converter
+    build: .
+    ports:
+      - "8080:8080"
+    command: python api.py
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+
+  worker:
+    # worker processing the jobs. They can be scaled when running docker-compose (docker-compose up --scale worker=3)
+    image: antoinede/gtfs2netexfr_converter
+    build: .
+    env_file: my_docker_env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    command: bash -c "sleep 1 && python worker.py" # waiting to be sure redis is ready
+    depends_on:
+      - redis

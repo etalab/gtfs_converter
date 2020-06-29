@@ -39,7 +39,6 @@ COPY --from=builder /usr/share/proj/ /usr/share/proj/
 
 ADD requirements.txt /
 RUN pip install -r requirements.txt
-ADD *.py /
+ADD gtfs_converter /gtfs_converter
 
-
-CMD python main.py
+WORKDIR /gtfs_converter
