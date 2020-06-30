@@ -37,3 +37,4 @@ services:
     command: bash -c "sleep 1 && python worker.py" # waiting to be sure redis is ready
     depends_on:
       - redis
+    restart: on-failure
