@@ -1,8 +1,8 @@
-import utils
 import os
 import logging
 import re
 import shutil
+import utils
 
 NETEX_CONVERTER = os.environ["NETEX_CONVERTER"]
 PUBLISHER = os.environ.get("NETEX_PUBLISHER", "transport.data.gouv.fr")

@@ -1,3 +1,4 @@
 # requirement only for dev purpose
 -r requirements.txt
 fire==0.3.1 # fire is used for easy cli
+honcho==1.0.1
