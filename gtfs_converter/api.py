@@ -37,6 +37,7 @@ def _convert(conversion_type):
                 "task_date": datetime.datetime.today(),
                 "conversion_type": conversion_type,
             },
+            job_timeout="10m"
         )
         logging.info(
             f"Enquing {url} for datagouv_id {datagouv_id}, for {conversion_type} conversion(s)"
