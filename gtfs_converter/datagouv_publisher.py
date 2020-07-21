@@ -13,7 +13,7 @@ def _format_title_as_datagouv(title):
     return title.replace("_", "-").lower()
 
 
-def find_community_resources(dataset_id, new_file, resource_url):
+def find_community_resources(dataset_id, new_file, resource_url, resource_format):
     """
     Checks if the a community resource already exists
     """
@@ -27,24 +27,30 @@ def find_community_resources(dataset_id, new_file, resource_url):
 
     data = ret.json()["data"]
     file_name = os.path.basename(new_file)
+    resource_format = (
+        resource_format.lower()
+    )  # datagouv lower case the format, we should do the same
 
     if data is not None:
         # Note: datagouv lowercase the file names, so we do the same
         filtered = [
             r
             for r in data
-            if _format_title_as_datagouv(r["title"])
-            == _format_title_as_datagouv(
-                file_name
-            )  # <- old way to find resource, remove once transition is done
-            or r.get("extras", {}).get(ORIGINAL_URL_KEY) == resource_url  # <- new way
+            if r.get("extras", {}).get(ORIGINAL_URL_KEY) == resource_url
+            and resource_format == r.get("format")
         ]
         logging.debug(
-            "title = %s, url = %s", _format_title_as_datagouv(file_name), resource_url
+            "title = %s, url = %s, format = %s",
+            _format_title_as_datagouv(file_name),
+            resource_url,
+            resource_format,
         )
         logging.debug(
             "community resources: %s",
-            [(r["title"], r.get("extras", {}).get(ORIGINAL_URL_KEY)) for r in data],
+            [
+                (r["title"], r.get("extras", {}).get(ORIGINAL_URL_KEY), r.get("format"))
+                for r in data
+            ],
         )
         if len(filtered) == 0:
             logging.debug("Found the dataset %s, but no existing ressource", dataset_id)
@@ -89,14 +95,16 @@ def create_community_resource(dataset_id, netex_file):
     return json
 
 
-def find_or_create_community_resource(dataset_id, new_file, url):
+def find_or_create_community_resource(dataset_id, new_file, url, resource_format):
     """
     When publishing a file, either the community resource already existed,
     then we only update the file.
 
     Otherwise we create a new resource
     """
-    community_resource = find_community_resources(dataset_id, new_file, url)
+    community_resource = find_community_resources(
+        dataset_id, new_file, url, resource_format
+    )
     if community_resource is not None:
         upload_resource(community_resource["id"], new_file)
         return community_resource
@@ -154,7 +162,7 @@ def publish_to_datagouv(dataset_id, new_file, additional_metadata, url):
             dataset_id,
         )
         community_resource = find_or_create_community_resource(
-            dataset_id, new_file, url
+            dataset_id, new_file, url, resource_format=additional_metadata["format"]
         )
         update_resource_metadata(
             dataset_id, community_resource, additional_metadata, url
