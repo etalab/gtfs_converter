@@ -28,8 +28,7 @@ def _find_community_resources(dataset_id):
     data = ret.json()["data"]
 
     if data is not None:
-        # Note: datagouv lowercase the file names, so we do the same
-        return [r for r in data if r["title"].lower().endswith("netex.zip")]
+        return data
     raise Exception(
         f"Searched community ressources of dataset {dataset_id}, could not understand response"
     )
@@ -69,6 +68,43 @@ def _delete_dataset_netex(dataset_id):
         logging.warning(
             "Unable to delete to the dataset %s. Generic Error %s", dataset_id, err
         )
+
+
+def delete_dataset_without_original_url():
+    """
+    Delete the resources added before the original_url mechanisme
+    """
+    logging.warning(
+        "*** deleting all netex files created by transport.data.gouv.fr ***"
+    )
+    r = requests.get("https://transport.data.gouv.fr/api/datasets")
+    r.raise_for_status()
+    datasets = r.json()
+
+    print_resource = lambda r: f"\n\t*[url = {r['url']} | extras = {r.get('extras')}]"
+    print_resources = lambda rs: [print_resource(r) for r in rs]
+
+    for d in datasets:
+        dataset_name = d["title"]
+        if d["type"] != "public-transit":
+            continue
+
+        dataset_id = d["id"]
+
+        community_resources = _find_community_resources(dataset_id)
+        logging.info("community ressources :  %s", print_resources(community_resources))
+        old_community_resources = [
+            r
+            for r in community_resources
+            if "transport:original_resource_url" not in r.get("extras", {})
+        ]
+        if old_community_resources:
+            logging.info(
+                "old community ressources :  %s",
+                print_resources(old_community_resources),
+            )
+            _delete_community_resources(dataset_id, old_community_resources)
+            logging.info("deleted community resource for the dataset %s", dataset_id)
 
 
 def delete_all_netex():
