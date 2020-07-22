@@ -40,7 +40,7 @@ def _convert_to_netex(gtfs, file_name, datagouv_id, url):
             "description": """Conversion automatique du fichier GTFS au format NeTEx (profil France)
 
 La conversion est effectuée par transport.data.gouv.fr en utilisant l’outil https://github.com/CanalTP/transit_model
-    """,
+""",
             "format": "NeTEx",
             "mime": "application/zip",
         }
@@ -55,7 +55,7 @@ def _convert_to_geojson(gtfs, file_name, datagouv_id, url):
             "description": """Création automatique d'un fichier geojson à partir du fichier GTFS.
 
 Le fichier est généré par transport.data.gouv.fr en utilisant l'outil https://gitlab.com/CodeursEnLiberte/gtfs-to-geojson/
-    """,
+""",
             "format": "geojson",
             "mime": "application/json",
         }
