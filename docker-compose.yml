@@ -8,7 +8,7 @@ services:
 
   dashboard:
     # RQ dashboard to monitor the different jobs
-    image: eoranged/rq-dashboard
+    image: antoinede/rq-dashboard
     ports:
       - "9181:9181"
     environment:
