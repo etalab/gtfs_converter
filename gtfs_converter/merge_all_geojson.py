@@ -6,10 +6,7 @@ import logging
 import tempfile
 import os
 import datagouv
-
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s -- %(levelname)s -- %(message)s"
-)
+from pylogctx import context as log_context
 
 AGGREGATED_DATASET_ID = os.environ["AGGREGATED_DATASET_ID"]
 
@@ -126,21 +123,26 @@ def merge_geojson():
     - 1 geojson
     - geopackage
     """
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        geojson_line_file = _create_merged_geojson_line(tmp_dir)
-        logging.info(f"geojson line created: {geojson_line_file}")
+    with log_context(task_id="merge_geojson"):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            geojson_line_file = _create_merged_geojson_line(tmp_dir)
+            logging.info(f"geojson line created: {geojson_line_file}")
 
-        geopackage_file = f"{tmp_dir}/public-transit.gpkg"
-        geojson_file = f"{tmp_dir}/public-transit.geojson"
-        utils.run_command(["ogr2ogr", geopackage_file, f"GeoJSONSeq:{geojson_line_file}"])
+            geopackage_file = f"{tmp_dir}/public-transit.gpkg"
+            geojson_file = f"{tmp_dir}/public-transit.geojson"
+            utils.run_command(
+                ["ogr2ogr", geopackage_file, f"GeoJSONSeq:{geojson_line_file}"]
+            )
 
-        ziped_geojson_file = f"{geojson_file}.zip"
-        ziped_geojson_line_file = f"{geojson_line_file}.zip"
-        utils.run_command(["ogr2ogr", geojson_file, f"GeoJSONSeq:{geojson_line_file}"])
-        utils.run_command(["zip", f"{ziped_geojson_file}", geojson_file])
-        utils.run_command(["zip", f"{ziped_geojson_line_file}", geojson_line_file])
+            ziped_geojson_file = f"{geojson_file}.zip"
+            ziped_geojson_line_file = f"{geojson_line_file}.zip"
+            utils.run_command(
+                ["ogr2ogr", geojson_file, f"GeoJSONSeq:{geojson_line_file}"]
+            )
+            utils.run_command(["zip", f"{ziped_geojson_file}", geojson_file])
+            utils.run_command(["zip", f"{ziped_geojson_line_file}", geojson_line_file])
 
-        _publish_to_datagouv(ziped_geojson_file, ziped_geojson_line_file, geopackage_file)
-
-
-merge_geojson()
+            _publish_to_datagouv(
+                ziped_geojson_file, ziped_geojson_line_file, geopackage_file
+            )
+            logging.info("all files published")

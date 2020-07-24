@@ -5,3 +5,4 @@ pylogctx==1.12.0
 python-json-logger==0.1.11
 rq==1.4.3
 jsonseq==1.0.0
+rq-scheduler==0.10.0

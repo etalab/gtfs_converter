@@ -38,3 +38,14 @@ services:
     depends_on:
       - redis
     restart: on-failure
+
+  scheduler:
+    # run background tasks, like geojson merging
+    image: antoinede/gtfs2netexfr_converter
+    build: .
+    environment:
+      - REDIS_URL=redis://redis:6379
+    command: bash -c "sleep 1 && python scheduler.py" # waiting to be sure redis is ready
+    depends_on:
+      - redis
+    restart: on-failure
