@@ -122,6 +122,8 @@ def merge_geojson():
     - 1 geojsonline
     - 1 geojson
     - geopackage
+
+    and publish those resources on data.gouv
     """
     with log_context(task_id="merge_geojson"):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -139,8 +141,8 @@ def merge_geojson():
             utils.run_command(
                 ["ogr2ogr", geojson_file, f"GeoJSONSeq:{geojson_line_file}"]
             )
-            utils.run_command(["zip", f"{ziped_geojson_file}", geojson_file])
-            utils.run_command(["zip", f"{ziped_geojson_line_file}", geojson_line_file])
+            utils.run_command(["zip", "--junk-paths", f"{ziped_geojson_file}", geojson_file])
+            utils.run_command(["zip", "--junk-paths", f"{ziped_geojson_line_file}", geojson_line_file])
 
             _publish_to_datagouv(
                 ziped_geojson_file, ziped_geojson_line_file, geopackage_file
