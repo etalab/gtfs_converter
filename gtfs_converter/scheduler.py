@@ -24,6 +24,7 @@ def _run_scheduler():
 def _run_task(task):
     """debug task to manually trigger a geojson merge"""
     from datetime import timedelta
+    logging.info(f"scheduling task {task} in 1s", extra={"task_id":"scheduler"})
 
     with rq.Connection(Redis.from_url(os.environ.get("REDIS_URL") or "redis://")):
         q = rq.Queue()
