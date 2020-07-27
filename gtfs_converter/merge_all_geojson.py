@@ -30,8 +30,6 @@ def _get_all_transport_geojson_resources():
                 continue
             if r["format"] != "geojson":
                 continue
-            if "geojson" not in r["title"]:
-                continue
 
             resources.append(
                 {
