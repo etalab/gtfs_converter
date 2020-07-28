@@ -1,12 +1,14 @@
+import datagouv
+
 import tempfile
 import requests
 import os
 import logging
 
-DATAGOUV_API = os.environ["DATAGOUV_API"]
-TRANSPORT_ORGANIZATION_ID = os.environ["TRANSPORT_ORGANIZATION_ID"]
-DATAGOUV_API_KEY = os.environ["DATAGOUV_API_KEY"]
-ORIGINAL_URL_KEY = "transport:original_resource_url"
+DATAGOUV_API = datagouv.DATAGOUV_API
+TRANSPORT_ORGANIZATION_ID = datagouv.TRANSPORT_ORGANIZATION_ID
+DATAGOUV_API_KEY = datagouv.DATAGOUV_API_KEY
+ORIGINAL_URL_KEY = datagouv.ORIGINAL_URL_KEY
 
 
 def _format_title_as_datagouv(title):
@@ -17,15 +19,7 @@ def find_community_resources(dataset_id, new_file, resource_url, resource_format
     """
     Checks if the a community resource already exists
     """
-    logging.debug(
-        "Searching community ressource %s in dataset %s", new_file, dataset_id
-    )
-    url = f"{DATAGOUV_API}/datasets/community_resources/"
-    params = {"dataset": dataset_id, "organization": TRANSPORT_ORGANIZATION_ID}
-    ret = requests.get(url, params=params)
-    ret.raise_for_status()
-
-    data = ret.json()["data"]
+    data = datagouv.get_transport_community_resources(dataset_id)
     file_name = os.path.basename(new_file)
     resource_format = (
         resource_format.lower()
@@ -73,29 +67,7 @@ def find_community_resources(dataset_id, new_file, resource_url, resource_format
     )
 
 
-def create_community_resource(dataset_id, netex_file):
-    """
-    Creates a community resource and uploads the file
-
-    This call will not link the resource. It requires and extra call
-    """
-    logging.debug("Creating a community resource on dataset %s", dataset_id)
-    headers = {"X-API-KEY": DATAGOUV_API_KEY}
-    files = {"file": open(netex_file, "rb")}
-    url = f"{DATAGOUV_API}/datasets/{dataset_id}/upload/community/"
-
-    ret = requests.post(url, headers=headers, files=files)
-    ret.raise_for_status()
-    json = ret.json()
-
-    logging.debug(
-        "Created a new community resource %s on dataset %s", json["id"], dataset_id
-    )
-
-    return json
-
-
-def find_or_create_community_resource(dataset_id, new_file, url, resource_format):
+def find_or_create_community_resource(dataset_id, new_file, url):
     """
     When publishing a file, either the community resource already existed,
     then we only update the file.
@@ -108,7 +80,7 @@ def find_or_create_community_resource(dataset_id, new_file, url, resource_format
     if community_resource is not None:
         upload_resource(community_resource["id"], new_file)
         return community_resource
-    return create_community_resource(dataset_id, new_file)
+    return datagouv.create_community_resource(dataset_id, new_file)
 
 
 def update_resource_metadata(dataset_id, resource, additional_metadata, url):
