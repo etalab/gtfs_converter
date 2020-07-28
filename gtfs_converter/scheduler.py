@@ -16,6 +16,7 @@ def _run_scheduler():
         scheduler.cron(
             cron_string="0 7 * * 2",  # every tuesday at 7:00,
             func="merge_all_geojson.merge_geojson",
+            timeout="20m",
         )
 
         scheduler.run()
@@ -31,7 +32,7 @@ def _run_task(task):
         scheduler = Scheduler(queue=q)
 
         scheduler.enqueue_in(
-            timedelta(seconds=1), func=task,
+            timedelta(seconds=1), func=task, timeout="20m",
         )
 
 
