@@ -86,7 +86,7 @@ def _publish_to_datagouv(ziped_geojson, ziped_geojson_line, geopackage):
         resources_id["public-transit.geojsonl.zip"],
         ziped_geojson_line,
         metadata={
-            "description": """Fichier contenant la position des arrêts ainsi que le tracès des lignes de france.
+            "description": """Fichier contenant la position des arrêts ainsi que le tracé des lignes de france.
 Chaque ligne correspond à un [GeoJSON](https://fr.wikipedia.org/wiki/GeoJSON), suivant le format [json-lines](http://jsonlines.org/).""",
             "format": "geojsonl",
             "mime": "application/zip",
@@ -97,7 +97,7 @@ Chaque ligne correspond à un [GeoJSON](https://fr.wikipedia.org/wiki/GeoJSON), 
         resources_id["public-transit.geojson.zip"],
         ziped_geojson,
         metadata={
-            "description": """Fichier [GeoJSON](https://fr.wikipedia.org/wiki/GeoJSON) contenant la position des arrêts ainsi que le tracès des lignes de france.""",
+            "description": """Fichier [GeoJSON](https://fr.wikipedia.org/wiki/GeoJSON) contenant la position des arrêts ainsi que le tracé des lignes de france.""",
             "format": "geojson",
             "mime": "application/zip",
         },
@@ -107,7 +107,7 @@ Chaque ligne correspond à un [GeoJSON](https://fr.wikipedia.org/wiki/GeoJSON), 
         resources_id["public-transit.gpkg"],
         geopackage,
         metadata={
-            "description": """Fichier [GeoPackage](https://www.geopackage.org/) contenant la position des arrêts ainsi que le tracès des lignes de france.""",
+            "description": """Fichier [GeoPackage](https://www.geopackage.org/) contenant la position des arrêts ainsi que le tracé des lignes de france.""",
             "format": "geopackage",
             "mime": "application/geopackage+sqlite3",
         },
@@ -139,8 +139,12 @@ def merge_geojson():
             utils.run_command(
                 ["ogr2ogr", geojson_file, f"GeoJSONSeq:{geojson_line_file}"]
             )
-            utils.run_command(["zip", "--junk-paths", f"{ziped_geojson_file}", geojson_file])
-            utils.run_command(["zip", "--junk-paths", f"{ziped_geojson_line_file}", geojson_line_file])
+            utils.run_command(
+                ["zip", "--junk-paths", f"{ziped_geojson_file}", geojson_file]
+            )
+            utils.run_command(
+                ["zip", "--junk-paths", f"{ziped_geojson_line_file}", geojson_line_file]
+            )
 
             _publish_to_datagouv(
                 ziped_geojson_file, ziped_geojson_line_file, geopackage_file
