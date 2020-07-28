@@ -32,7 +32,6 @@ def get_transport_community_resources(dataset_id):
     """
     get all community resources for a dataset
     """
-    logging.debug("get community ressource in dataset %s", dataset_id)
     url = f"{DATAGOUV_API}/datasets/community_resources/"
     ret = requests.get(
         url, params={"dataset": dataset_id, "organization": TRANSPORT_ORGANIZATION_ID}
