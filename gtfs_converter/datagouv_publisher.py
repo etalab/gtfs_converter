@@ -67,7 +67,11 @@ def find_community_resources(dataset_id, new_file, resource_url, resource_format
     )
 
 
-def find_or_create_community_resource(dataset_id, new_file, url):
+def find_or_create_community_resource(
+        dataset_id,
+        new_file,
+        url,
+        resource_format):
     """
     When publishing a file, either the community resource already existed,
     then we only update the file.
