@@ -1,4 +1,4 @@
-FROM navitia/transit_model:v0.24.0 as transit_model
+FROM navitia/transit_model:v0.27.0 as transit_model
 
 FROM rust:latest as builder
 
