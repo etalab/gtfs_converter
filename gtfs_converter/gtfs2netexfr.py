@@ -1,6 +1,5 @@
 import os
 import logging
-import re
 import shutil
 import utils
 

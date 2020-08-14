@@ -60,7 +60,7 @@ def convert_gtfs_to_geojson():
 
 @app.route("/convert_to_netex_and_geojson")
 def convert_gtfs_to_netex_and_geojson():
-    return _convert(["gtfs2netex", "gtfs2geojson"])
+    return _convert(["gtfs2geojson", "gtfs2netex"])
 
 
 @app.route("/")
