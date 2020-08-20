@@ -23,3 +23,9 @@ def convert(gtfs_src, fname, tmp_dir):
         return output
 
     raise Exception("Unable to convert file")
+
+
+def convert_sync(gtfs_src):
+    return utils.run_command_get_stdout(
+        [GEOJSON_CONVERTER, "--input", gtfs_src]
+    )

@@ -2,10 +2,12 @@ import subprocess
 import urllib
 import logging
 import re
+import tempfile
 
 
 def run_command(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     while True:
         output = process.stdout.readline().decode()
         output_err = process.stderr.readline().decode()
@@ -19,6 +21,10 @@ def run_command(command):
     return rc
 
 
+def run_command_get_stdout(command):
+    return subprocess.check_output(command)
+
+
 def download_gtfs(url):
     """
     Downloads the requested GTFS and saves it as local file.
@@ -28,7 +34,8 @@ def download_gtfs(url):
     local_filename, headers = urllib.request.urlretrieve(url)
     fname = ""
     if "Content-Disposition" in headers.keys():
-        fname = re.findall('filename="?([^"]+)"?', headers["Content-Disposition"])[0]
+        fname = re.findall(
+            'filename="?([^"]+)"?', headers["Content-Disposition"])[0]
     else:
         fname = url.split("/")[-1]
 

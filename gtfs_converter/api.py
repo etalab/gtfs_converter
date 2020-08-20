@@ -6,14 +6,14 @@ and upload them as community resources to transport.data.gouv.fr
 
 import logging
 import os
-import queue
-import threading
 import datetime
+import tempfile
 from waitress import serve
 from flask import Flask, request, make_response
-import tempfile
 from redis import Redis
 from rq import Queue  # type: ignore
+from werkzeug.utils import secure_filename
+from gtfs2geojson import convert_sync
 
 import init_log
 
@@ -48,6 +48,28 @@ def _convert(conversion_type):
         return make_response("url and datagouv_id parameters are required", 400)
 
 
+def _allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ['zip']
+
+
+def _convert_to_geojson_sync():
+    try:
+        if 'file' not in request.files:
+            return "no file"
+        file = request.files['file']
+        if file.filename == '':
+            return "no filename"
+        if file and _allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                file_path = os.path.join(tmpdirname, filename)
+                file.save(file_path)
+                return convert_sync(file_path)
+    except:
+        return "error in geojson conversion", 500
+
+
 @app.route("/gtfs2netexfr")
 def convert_gtfs_to_netex():
     return _convert(["gtfs2netex"])
@@ -56,6 +78,11 @@ def convert_gtfs_to_netex():
 @app.route("/gtfs2geojson")
 def convert_gtfs_to_geojson():
     return _convert(["gtfs2geojson"])
+
+
+@app.route("/gtfs2geojson_sync", methods=['POST'])
+def convert_gtfs_to_geojson_sync():
+    return _convert_to_geojson_sync()
 
 
 @app.route("/convert_to_netex_and_geojson")
