@@ -4,21 +4,53 @@ import logging
 import re
 import tempfile
 
+import select
+import fcntl
+import os
+import errno
+
+# from: http://stackoverflow.com/questions/7729336/how-can-i-print-and-display-subprocess-stdout-and-stderr-output-without-distorti/7730201#7730201
+def make_async(fd):
+    fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
+
+
+# Helper function to read some data from a file descriptor, ignoring EAGAIN errors
+# (those errors mean that there are no data available for the moment)
+def read_async(fd):
+    try:
+        return fd.read()
+    except IOError as e:
+        if e.errno != errno.EAGAIN:
+            raise e
+        else:
+            return ""
+
 
 def run_command(command):
-    process = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    while True:
-        output = process.stdout.readline().decode()
-        output_err = process.stderr.readline().decode()
-        if output:
-            logging.info(output.strip())
-        if output_err:
-            logging.error(output_err.strip())
-        if process.poll() is not None:
-            break
-    rc = process.poll()
-    return rc
+
+    proc = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True
+    )
+    try:
+        make_async(proc.stderr)
+        make_async(proc.stdout)
+        while True:
+            select.select([proc.stdout, proc.stderr], [], [])
+
+            output = read_async(proc.stdout)
+            if output:
+                logging.info(output.strip())
+            output_err = read_async(proc.stderr)
+            if output_err:
+                logging.error(output_err.strip())
+
+            if proc.poll() is not None:
+                break
+    finally:
+        proc.stdout.close()
+        proc.stderr.close()
+
+    return proc.returncode
 
 
 def run_command_get_stdout(command):
@@ -34,8 +66,7 @@ def download_gtfs(url):
     local_filename, headers = urllib.request.urlretrieve(url)
     fname = ""
     if "Content-Disposition" in headers.keys():
-        fname = re.findall(
-            'filename="?([^"]+)"?', headers["Content-Disposition"])[0]
+        fname = re.findall('filename="?([^"]+)"?', headers["Content-Disposition"])[0]
     else:
         fname = url.split("/")[-1]
 
