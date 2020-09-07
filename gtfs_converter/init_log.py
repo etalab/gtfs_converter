@@ -19,7 +19,10 @@ def config_worker_log():
                     "formatter": "basic",
                 }
             },
-            "root": {"level": "DEBUG", "handlers": ["console"]},
+            "loggers": {
+                "": {"handlers": ["console"], "level": "DEBUG", "propagate": True},
+                "urllib3": {"handlers": ["console"], "level": "WARNING",},
+            },
         }
     )
 
