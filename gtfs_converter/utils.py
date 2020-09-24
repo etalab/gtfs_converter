@@ -64,9 +64,11 @@ def download_gtfs(url):
     """
     logging.debug(f"Start downloading {url}")
     local_filename, headers = urllib.request.urlretrieve(url)
-    fname = ""
-    if "Content-Disposition" in headers.keys():
-        fname = re.findall('filename="?([^"]+)"?', headers["Content-Disposition"])[0]
+
+    # we try to get the filename from the Content-Disposition header, else we get it from the url
+    fname_in_header = re.findall('filename="?([^"]+)"?', headers.get("Content-Disposition", ''))
+    if fname_in_header:
+        fname = fname_in_header[0]
     else:
         fname = url.split("/")[-1]
 
