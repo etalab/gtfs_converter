@@ -19,8 +19,7 @@ def convert(params):
 
             for conversion in params["conversion_type"]:
                 if conversion == "gtfs2netex":
-                    _convert_to_netex(
-                        gtfs, fname, params["datagouv_id"], params["url"])
+                    _convert_to_netex(gtfs, fname, params["datagouv_id"], params["url"])
                 if conversion == "gtfs2geojson":
                     _convert_to_geojson(
                         gtfs, fname, params["datagouv_id"], params["url"]

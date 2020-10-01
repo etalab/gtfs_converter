@@ -67,11 +67,7 @@ def find_community_resources(dataset_id, new_file, resource_url, resource_format
     )
 
 
-def find_or_create_community_resource(
-        dataset_id,
-        new_file,
-        url,
-        resource_format):
+def find_or_create_community_resource(dataset_id, new_file, url, resource_format):
     """
     When publishing a file, either the community resource already existed,
     then we only update the file.
@@ -87,7 +83,7 @@ def find_or_create_community_resource(
     return datagouv.create_community_resource(dataset_id, new_file)
 
 
-def update_resource_metadata(dataset_id, resource, additional_metadata, url):
+def update_resource_metadata(dataset_id, resource_id, additional_metadata, url):
     """
     Updates metadata of the resources.
 
@@ -97,18 +93,21 @@ def update_resource_metadata(dataset_id, resource, additional_metadata, url):
 
     Does not return
     """
-    logging.debug("Updating metadata of resource %s", resource["id"])
-    resource.update(additional_metadata)
-    resource["dataset"] = dataset_id
-    resource["organization"] = TRANSPORT_ORGANIZATION_ID
-    resource["extras"] = {ORIGINAL_URL_KEY: url}
+    resource = {
+        "id": resource_id,
+        "dataset": dataset_id,
+        "organization": TRANSPORT_ORGANIZATION_ID,
+        "extras": {ORIGINAL_URL_KEY: url},
+        **additional_metadata,
+    }
+    logging.debug("Updating metadata of resource %s", resource_id)
 
-    url = f"{DATAGOUV_API}/datasets/community_resources/{resource['id']}/"
+    url = f"{DATAGOUV_API}/datasets/community_resources/{resource_id}/"
     headers = {"X-API-KEY": DATAGOUV_API_KEY}
 
     ret = requests.put(url, headers=headers, json=resource)
     ret.raise_for_status()
-    logging.debug("Updating of resource %s done", resource["id"])
+    logging.debug("Updating of resource %s done", resource_id)
 
 
 def upload_resource(resource_id, filename):
@@ -141,7 +140,7 @@ def publish_to_datagouv(dataset_id, new_file, additional_metadata, url):
             dataset_id, new_file, url, resource_format=additional_metadata["format"]
         )
         update_resource_metadata(
-            dataset_id, community_resource, additional_metadata, url
+            dataset_id, community_resource["id"], additional_metadata, url
         )
         logging.info("Added %s to the dataset %s", new_file, dataset_id)
     except requests.HTTPError as err:
