@@ -105,11 +105,9 @@ def update_resource_metadata(dataset_id, resource_id, additional_metadata, url):
     url = f"{DATAGOUV_API}/datasets/community_resources/{resource_id}/"
     headers = {"X-API-KEY": DATAGOUV_API_KEY}
 
-    logging.debug(f"update resource with payload: {resource}")
     ret = requests.put(url, headers=headers, json=resource)
-    logging.debug("pouet")
     ret.raise_for_status()
-    logging.debug("Updating of resource %s done: %s", resource_id, ret.json())
+    logging.debug("Updating of resource %s done", resource_id)
 
 
 def upload_resource(resource_id, filename):
