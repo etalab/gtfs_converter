@@ -49,16 +49,15 @@ def _convert(conversion_type):
 
 
 def _allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ['zip']
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ["zip"]
 
 
 def _convert_to_geojson_sync():
     try:
-        if 'file' not in request.files:
+        if "file" not in request.files:
             return "no file"
-        file = request.files['file']
-        if file.filename == '':
+        file = request.files["file"]
+        if file.filename == "":
             return "no filename"
         if file and _allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -80,7 +79,7 @@ def convert_gtfs_to_geojson():
     return _convert(["gtfs2geojson"])
 
 
-@app.route("/gtfs2geojson_sync", methods=['POST'])
+@app.route("/gtfs2geojson_sync", methods=["POST"])
 def convert_gtfs_to_geojson_sync():
     return _convert_to_geojson_sync()
 

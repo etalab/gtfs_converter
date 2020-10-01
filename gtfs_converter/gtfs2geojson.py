@@ -26,6 +26,4 @@ def convert(gtfs_src, fname, tmp_dir):
 
 
 def convert_sync(gtfs_src):
-    return utils.run_command_get_stdout(
-        [GEOJSON_CONVERTER, "--input", gtfs_src]
-    )
+    return utils.run_command_get_stdout([GEOJSON_CONVERTER, "--input", gtfs_src])
