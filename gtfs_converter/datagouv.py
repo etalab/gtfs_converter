@@ -19,6 +19,9 @@ def delete_community_resources(dataset_id, resources_id):
         "deleting a community resource %s on dataset %s", resources_id, dataset_id
     )
     ret = requests.delete(url, params={"dataset": dataset_id}, headers=headers)
+    if ret.status_code == 404:
+        # it's ok if the resource has already been deleted
+        return
     ret.raise_for_status()
 
 
@@ -78,10 +81,6 @@ def update_resource(dataset_id, resource_id, new_file, metadata):
     updated_resource_json = ret.json()
 
     # after the upload, we set the resource metadata
-    # new_resource = {
-    #     **updated_resource_json,
-    #     **metadata
-    # }
     new_resource = {**metadata, "id": resource_id}
     logging.debug("Updating metadata of resource %s", resource_id)
 
