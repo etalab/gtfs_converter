@@ -37,7 +37,7 @@ def _convert(conversion_type):
                 "task_date": datetime.datetime.today(),
                 "conversion_type": conversion_type,
             },
-            job_timeout="20m",
+            job_timeout="30m",
             result_ttl=86400,
         )
         logging.info(
