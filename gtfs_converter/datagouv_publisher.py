@@ -83,11 +83,9 @@ def find_or_create_community_resource(dataset_id, new_file, url, resource_format
     return datagouv.create_community_resource(dataset_id, new_file)
 
 
-def update_resource_metadata(dataset_id, resource_id, additional_metadata, url):
+def update_resource_metadata(resource_id, additional_metadata, url):
     """
     Updates metadata of the resources.
-
-    This call is opportant to link the resource to a dataset.
 
     It also sets the organisation, format and description.
 
@@ -95,7 +93,6 @@ def update_resource_metadata(dataset_id, resource_id, additional_metadata, url):
     """
     resource = {
         "id": resource_id,
-        "dataset": dataset_id,
         "organization": TRANSPORT_ORGANIZATION_ID,
         "extras": {ORIGINAL_URL_KEY: url},
         **additional_metadata,
@@ -140,7 +137,7 @@ def publish_to_datagouv(dataset_id, new_file, additional_metadata, url):
             dataset_id, new_file, url, resource_format=additional_metadata["format"]
         )
         update_resource_metadata(
-            dataset_id, community_resource["id"], additional_metadata, url
+            community_resource["id"], additional_metadata, url
         )
         logging.info("Added %s to the dataset %s", new_file, dataset_id)
     except requests.HTTPError as err:
