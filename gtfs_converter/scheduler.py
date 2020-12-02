@@ -19,10 +19,10 @@ def _run_scheduler():
             timeout="20m",
         )
 
-        # scheduler.cron(
-        #     cron_string="0 3 * * *",  # every day at 3:00,
-        #     func="cleanup.cleanup_old_resources",
-        # )
+        scheduler.cron(
+            cron_string="0 3 * * *",  # every day at 3:00,
+            func="cleanup.cleanup_old_resources",
+        )
 
         scheduler.run()
 
