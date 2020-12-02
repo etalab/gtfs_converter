@@ -20,7 +20,7 @@ def _run_scheduler():
         )
 
         scheduler.cron(
-            cron_string="0 3 * * *",  # every day at 3:00,
+            cron_string="0 0 * * *",  # every day at 00:00,
             func="cleanup.cleanup_old_resources",
         )
 
