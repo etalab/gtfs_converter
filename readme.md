@@ -26,7 +26,7 @@ If you use [direnv](https://direnv.net/), copy the `envrc.example` to `.envrc` a
 
 You need to have:
 * [gtfs2netexfr](https://github.com/CanalTP/transit_model/tree/master/gtfs2netexfr) and set the env var `NETEX_CONVERTER` to the path to this binary
-* [gtfs-to-geojson](https://gitlab.com/CodeursEnLiberte/gtfs-to-geojson/) and set the env var `GEOJSON_CONVERTER` to the path to this binary
+* [gtfs-to-geojson](https://github.com/rust-transit/gtfs-to-geojson) and set the env var `GEOJSON_CONVERTER` to the path to this binary
 
 Those binaries need to be build ([rust](https://www.rust-lang.org/) is needed).
 
