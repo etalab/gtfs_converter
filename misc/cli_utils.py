@@ -21,7 +21,7 @@ def _find_community_resources(dataset_id):
     """
     logging.debug("Searching community ressource in dataset %s", dataset_id)
     url = f"{DATAGOUV_API}/datasets/community_resources/"
-    params = {"dataset": dataset_id, "organization": TRANSPORT_ORGANIZATION_ID}
+    params = {"dataset": dataset_id, "organization": TRANSPORT_ORGANIZATION_ID, "page_size": 50}
     ret = requests.get(url, params=params)
     ret.raise_for_status()
 
