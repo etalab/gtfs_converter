@@ -1,3 +1,7 @@
+# Repository is archived!
+
+This repo has been very useful, but is not needed anymore 🤷‍♂️. GTFS conversions are now managed directly from our main Elixir Application. See [here](https://github.com/etalab/transport-site/issues/2096) and [here](https://github.com/etalab/transport-site/pull/2095).
+
 # Goal
 
 Those scripts are made designed to convert files on transport.data.gouv.fr into differents formats.
